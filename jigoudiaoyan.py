@@ -63,7 +63,7 @@ class get_jigoudiaoyan:
 
         con = MySQLdb.connect(host="192.168.0.114", port=3306, user="root", passwd="fit123456", charset="utf8",
                               db="pachong")
-        browser = webdriver.Chrome()
+        browser = webdriver.PhantomJS('/home/fit/.linuxbrew/lib/node_modules/phantomjs/lib/phantom/bin/phantomjs')
         for page in xrange(1, page_count + 1):
             start = time.clock()
             url = '''http://data.eastmoney.com/DataCenter_V3/jgdy/xx.ashx?pagesize=50&page=%d''' % page
@@ -106,7 +106,7 @@ class get_jigoudiaoyan:
         page_count = self.get_pages_count()
         con = MySQLdb.connect(host="192.168.0.114", port=3306, user="root", passwd="fit123456", charset="utf8",
                               db="pachong")
-        browser = webdriver.Chrome()
+        browser = webdriver.PhantomJS('/home/fit/.linuxbrew/lib/node_modules/phantomjs/lib/phantom/bin/phantomjs')
         lastest_date = self.get_lastest_date()
         for page in xrange(1, page_count + 1):
             start = time.clock()
