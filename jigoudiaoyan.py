@@ -109,7 +109,6 @@ class get_jigoudiaoyan:
         browser = webdriver.PhantomJS('/home/fit/.linuxbrew/lib/node_modules/phantomjs/lib/phantom/bin/phantomjs')
         lastest_date = self.get_lastest_date()
         for page in xrange(1, page_count + 1):
-            start = time.clock()
             url = '''http://data.eastmoney.com/DataCenter_V3/jgdy/xx.ashx?pagesize=50&page=%d''' % page
             url += "&js=var%20ngDoXCbV&param=&sortRule=-1&sortType=0&rt="
             url += self.get_timstamp()
@@ -127,8 +126,12 @@ class get_jigoudiaoyan:
             df_that_day = df[df['NoticeDate'] == lastest_date]
             if len(df_that_day) != 0:
                 pass
+            # 插入新数据
             if len(df_new) != 0:
                 pd.io.sql.to_sql(df_new, 'jigoudiaoyan_new', con, flavor='mysql', if_exists='append', index=False)
+            if len(df_that_day)!=0:
+                # 重叠的那天对应的数据需要判断并去重之后才能插入
+                self.upsert_data(df_that_day,lastest_date)
             if len(df_update) != len(df):
                 break
 
