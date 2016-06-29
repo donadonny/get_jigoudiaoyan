@@ -52,7 +52,7 @@ class get_jigoudiaoyan:
     def get_lastest_date(self):
         con = MySQLdb.connect(host="192.168.0.114", user="root", passwd="fit123456", port=3306, charset="utf8",
                               db="pachong")
-        sql = "select NoticeDate from jigoudiaoyan_new order by jigoudiaoyan_new desc limit 0,1"
+        sql = "select NoticeDate from jigoudiaoyan order by NoticeDate desc limit 0,1"
         cur = con.cursor()
         cur.execute(sql)
         result = cur.fetchone()
@@ -87,7 +87,8 @@ class get_jigoudiaoyan:
     def upsert_data(self, df, lastest_date):
         con = MySQLdb.connect(host="192.168.0.114", port=3306, user="root", passwd="fit123456", charset="utf8",
                               db="pachong")
-        sql = "select * from jigoudiaoyan_new where NoticeDate='%s' " % lastest_date
+        sql = "select ChangePercent,`Close`,CompanyCode,CompanyName,Description,EndDate,Licostaff,Maincontent,NoticeDate" \
+              " OrgCode,OrgName,OrgSum,Orgtype,OrgtypeName,Personnel,Place,SCode,SName,StartDate from jigoudiaoyan where NoticeDate='%s' " % lastest_date
         df_remain = pd.read_sql(sql, con=con)
         remain_set = set(map(tuple, df_remain.values))
         all_set = set(map(tuple, df.values))
@@ -96,11 +97,13 @@ class get_jigoudiaoyan:
             return
         update_list = map(list, divide_set)
         columns = [
-            "SCode", "SName", "StartDate", "EndDate", "NoticeDate", "Description", "CompanyName", "OrgName",
-            "CompanyCode", "Licostaff", "ChangePercent", "Place", "OrgCode", "OrgtypeName", "Orgtype", "Personnel",
+            'ChangePercent', 'Close', 'CompanyCode', 'CompanyName', 'Description', 'EndDate', 'Licostaff',
+                   'Maincontent', 'NoticeDate', 'OrgCode', 'OrgName', 'OrgSum', 'Orgtype', 'OrgtypeName',
+                   'Personnel', 'Place', 'SCode', 'SName', 'StartDate'
         ]
+
         update_df = pd.DataFrame(update_list, columns=columns)
-        pd.io.sql.to_sql(update_df, 'jigoudiaoyan_new', con, flavor='mysql', if_exists='append', index=False)
+        pd.io.sql.to_sql(update_df, 'jigoudiaoyan', con, flavor='mysql', if_exists='append', index=False)
 
     def refresh_table(self):
         page_count = self.get_pages_count()
@@ -124,18 +127,16 @@ class get_jigoudiaoyan:
             df_update = df[df['NoticeDate'] >= lastest_date]
             df_new = df[df['NoticeDate'] > lastest_date]
             df_that_day = df[df['NoticeDate'] == lastest_date]
-            if len(df_that_day) != 0:
-                pass
             # 插入新数据
             if len(df_new) != 0:
-                pd.io.sql.to_sql(df_new, 'jigoudiaoyan_new', con, flavor='mysql', if_exists='append', index=False)
-            if len(df_that_day)!=0:
+                pd.io.sql.to_sql(df_new, 'jigoudiaoyan', con, flavor='mysql', if_exists='append', index=False)
+            if len(df_that_day) != 0:
                 # 重叠的那天对应的数据需要判断并去重之后才能插入
-                self.upsert_data(df_that_day,lastest_date)
+                self.upsert_data(df_that_day, lastest_date)
             if len(df_update) != len(df):
                 break
 
 
 if __name__ == "__main__":
-    crawler = get_jigoudiaoyan()
-    crawler.refresh_table()
+    tool = get_jigoudiaoyan()
+    tool.refresh_table()
